@@ -1,0 +1,276 @@
+/* LoginPage.css */
+
+.login-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background-color: #FDFBF7;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Left Side - Branding */
+.brand-side {
+  display: none; /* Hidden on mobile by default */
+  background-color: #810020;
+  color: white;
+  padding: 3rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Show branding side on larger screens */
+@media (min-width: 1024px) {
+  .brand-side {
+    display: flex;
+    width: 50%;
+  }
+  .form-side {
+    width: 50%;
+  }
+}
+
+.logo-circle {
+  width: 12rem;
+  height: 12rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.logo-icon {
+  color: #C5A059;
+  font-size: 8rem;
+  line-height: 1;
+}
+
+.logo-image {
+  width: 8rem;
+  height: 8rem;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-title {
+  font-size: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* Right Side - Form */
+.form-side {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 28rem;
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  padding: 2.5rem;
+  border: 1px solid #f3f4f6;
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.card-subtitle {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* Form Elements */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.input-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.forgot-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #C5A059;
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box; /* Ensures padding doesn't stretch the input */
+}
+
+.form-input:focus {
+  border-color: #810020;
+  box-shadow: 0 0 0 2px rgba(129, 0, 32, 0.2);
+}
+
+.password-input {
+  padding-right: 2.5rem;
+}
+
+.toggle-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.toggle-btn:hover {
+  color: #374151;
+}
+
+.submit-btn {
+  width: 100%;
+  background-color: #810020;
+  color: white;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+  font-size: 1rem;
+}
+
+.submit-btn:hover {
+  background-color: #6a001a;
+}
+
+/* Dividers & OAuth */
+.divider-container {
+  margin-top: 2rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.divider-line {
+  border-top: 1px solid #e5e7eb;
+  width: 100%;
+}
+
+.divider-text {
+  background-color: white;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  position: absolute;
+}
+
+.oauth-container {
+  margin-top: 2rem;
+}
+
+.google-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: white;
+  color: #374151;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.google-btn:hover {
+  background-color: #f9fafb;
+}
+
+.google-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Footer */
+.register-text {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.login-error-text {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #b91c1c;
+}
+
+.register-link {
+  color: #C5A059;
+  font-weight: 500;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.register-link:hover {
+  text-decoration: underline;
+}
