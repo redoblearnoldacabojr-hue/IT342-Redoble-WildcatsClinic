@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS medical_records (
+    id BIGSERIAL PRIMARY KEY,
+    patient_id BIGINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    summary TEXT NOT NULL,
+    date VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+
+ALTER TABLE medical_records ADD COLUMN IF NOT EXISTS patient_id BIGINT;
+ALTER TABLE medical_records ADD COLUMN IF NOT EXISTS title VARCHAR(255);
+ALTER TABLE medical_records ADD COLUMN IF NOT EXISTS summary TEXT;
+ALTER TABLE medical_records ADD COLUMN IF NOT EXISTS date VARCHAR(50);
+ALTER TABLE medical_records ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;

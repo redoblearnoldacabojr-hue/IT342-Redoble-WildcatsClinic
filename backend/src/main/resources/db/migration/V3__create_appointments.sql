@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS appointments (
+    id BIGSERIAL PRIMARY KEY,
+    patient_id BIGINT NOT NULL,
+    patient_name VARCHAR(255) NOT NULL,
+    date DATE NOT NULL,
+    time TIME NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS patient_id BIGINT;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS patient_name VARCHAR(255);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS date DATE;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS time TIME;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reason VARCHAR(255);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;
