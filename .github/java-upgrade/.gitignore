@@ -1,0 +1,26 @@
+# Java/Spring Boot typical .gitignore
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Build directories
+target/
+bin/
+out/
+
+# Logs
+*.log
+
+# Environment/secret configs
+.env
+backend/src/main/resources/application.properties
+
+# Other sensitive config files (add as needed)
