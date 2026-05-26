@@ -7,8 +7,6 @@ services:
     buildCommand: ./mvnw -DskipTests package
     startCommand: java -jar target/wildcatclinic-0.0.1-SNAPSHOT.jar
     envVars:
-      - key: SERVER_PORT
-        value: 10000
       - key: SPRING_DATASOURCE_URL
         sync: false
       - key: SPRING_DATASOURCE_USERNAME
@@ -24,4 +22,14 @@ services:
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+  - type: static_site
+    name: wildcatclinic-frontend
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_URL
         sync: false
