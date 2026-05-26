@@ -1,8 +1,10 @@
+import { apiFetch, buildApiUrl } from './http';
+
 const TOKEN_KEY = "wc_token";
 const USER_KEY = "wc_user";
 
 async function requestJson(path, payload) {
-  const response = await fetch(path, {
+  const response = await apiFetch(path, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -83,7 +85,7 @@ export async function getCurrentUser() {
     throw error;
   }
 
-  const response = await fetch("/api/auth/me", {
+  const response = await apiFetch("/api/auth/me", {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -108,7 +110,7 @@ export async function logoutUser() {
   }
 
   try {
-    await fetch('/api/auth/logout', {
+    await apiFetch('/api/auth/logout', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -121,5 +123,5 @@ export async function logoutUser() {
 
 export function startGoogleLogin() {
   clearAuth();
-  window.location.assign("/oauth2/authorization/google");
+  window.location.assign(buildApiUrl("/oauth2/authorization/google"));
 }

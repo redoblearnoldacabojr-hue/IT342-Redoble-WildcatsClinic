@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useMemo, useState } from 'react';
 import { getStoredToken } from '../api/auth';
+import { apiFetch } from '../api/http';
 
 function formatDateForInput(d) {
   const yyyy = d.getFullYear();
@@ -70,7 +71,7 @@ export default function AppointmentModal({ show, onClose, user, existingAppointm
     try {
       setIsSaving(true);
       const token = getStoredToken();
-      const resp = await fetch('/api/appointments', {
+      const resp = await apiFetch('/api/appointments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

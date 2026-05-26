@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useMemo, useState } from 'react';
 import { clearAuth, getCurrentUser, getStoredToken, logoutUser } from '../api/auth';
+import { apiFetch } from '../api/http';
 import AppointmentModal from '../components/AppointmentModal';
 import AppointmentDetailsModal from '../components/AppointmentDetailsModal';
 import AppointmentsPage from './appointments';
@@ -82,19 +83,19 @@ function Dashboard({ onLogout }) {
   useEffect(() => {
     const loadManagementData = async (token) => {
       const [usersRes, doctorsRes, reportsRes] = await Promise.all([
-        fetch('/api/users', {
+        apiFetch('/api/users', {
           method: 'GET',
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         }),
-        fetch('/api/doctors', {
+        apiFetch('/api/doctors', {
           method: 'GET',
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         }),
-        fetch('/api/reports/summary', {
+        apiFetch('/api/reports/summary', {
           method: 'GET',
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -132,7 +133,7 @@ function Dashboard({ onLogout }) {
         try {
           setAppointmentsLoading(true);
           setAppointmentsError('');
-          const res = await fetch('/api/appointments', {
+          const res = await apiFetch('/api/appointments', {
             method: 'GET',
             headers: {
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -146,7 +147,7 @@ function Dashboard({ onLogout }) {
             setAppointments([]);
           }
 
-          const notificationsRes = await fetch('/api/notifications', {
+          const notificationsRes = await apiFetch('/api/notifications', {
             method: 'GET',
             headers: {
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -213,19 +214,19 @@ function Dashboard({ onLogout }) {
     setManagementLoading(true);
     try {
       const [usersRes, doctorsRes, reportsRes] = await Promise.all([
-        fetch('/api/users', {
+        apiFetch('/api/users', {
           method: 'GET',
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         }),
-        fetch('/api/doctors', {
+        apiFetch('/api/doctors', {
           method: 'GET',
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         }),
-        fetch('/api/reports/summary', {
+        apiFetch('/api/reports/summary', {
           method: 'GET',
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -257,7 +258,7 @@ function Dashboard({ onLogout }) {
     }
 
     const token = getStoredToken();
-    const response = await fetch('/api/notifications/read-all', {
+    const response = await apiFetch('/api/notifications/read-all', {
       method: 'PATCH',
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
