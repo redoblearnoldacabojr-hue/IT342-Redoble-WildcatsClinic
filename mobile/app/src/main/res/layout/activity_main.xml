@@ -5,6 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/wildcat_paper"
     tools:context=".MainActivity">
 
     <LinearLayout
@@ -16,22 +17,43 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="?attr/colorPrimary"
+            android:backgroundTint="@color/wildcat_burgundy"
+            android:minHeight="64dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:titleTextColor="@android:color/white"
+            app:titleCentered="false"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
-        <FrameLayout
-            android:id="@+id/content_frame"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:layout_margin="16dp"
+            app:cardBackgroundColor="@color/wildcat_surface"
+            app:cardCornerRadius="22dp"
+            app:cardElevation="8dp"
+            app:cardUseCompatPadding="true">
+
+            <FrameLayout
+                android:id="@+id/content_frame"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/wildcat_surface" />
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/navigation_view"
-        android:layout_width="wrap_content"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:background="@color/wildcat_burgundy_dark"
+        app:headerLayout="@layout/drawer_header"
+        app:itemBackground="@drawable/navigation_item_background"
+        app:itemHorizontalPadding="18dp"
+        app:itemIconTint="@color/navigation_item_text"
+        app:itemTextColor="@color/navigation_item_text"
+        app:itemVerticalPadding="10dp"
         app:menu="@menu/drawer_menu" />
-
 </androidx.drawerlayout.widget.DrawerLayout>

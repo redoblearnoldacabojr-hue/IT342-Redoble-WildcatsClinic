@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="wildcat_burgundy">#810020</color>
+    <color name="wildcat_burgundy_dark">#6A001A</color>
+    <color name="wildcat_gold">#C5A059</color>
+    <color name="wildcat_paper">#FDFBF7</color>
+    <color name="wildcat_surface">#FFFFFF</color>
+    <color name="wildcat_border">#E5E7EB</color>
+    <color name="wildcat_text_primary">#111827</color>
+    <color name="wildcat_text_secondary">#6B7280</color>
+    <color name="wildcat_text_muted">#4B5563</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>
