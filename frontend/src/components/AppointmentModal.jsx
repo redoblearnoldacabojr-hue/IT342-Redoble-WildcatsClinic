@@ -18,9 +18,11 @@ function formatTimeForInput(d) {
 export default function AppointmentModal({ show, onClose, user, existingAppointments = [], onCreate }) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('09:00');
-  const [reason, setReason] = useState('General Checkup');
+  const [reason, setReason] = useState('General Consultation');
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  const reasonOptions = ['General Consultation', 'Medical Services', 'Dental Service'];
 
   useEffect(() => {
     if (show) {
@@ -28,15 +30,16 @@ export default function AppointmentModal({ show, onClose, user, existingAppointm
       const now = new Date();
       setDate(formatDateForInput(now));
       // default to next available hour
-      const nextHour = new Date(now.getTime());
+      const nextHour = new Date(now);
       nextHour.setMinutes(0);
       nextHour.setHours(nextHour.getHours() + 1);
       setTime(formatTimeForInput(nextHour));
-      setReason('General Checkup');
+      setReason('General Consultation');
     }
   }, [show]);
 
   const minDate = useMemo(() => formatDateForInput(new Date()), []);
+  const currentUserId = user?.userId ?? user?.id ?? null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,7 +58,7 @@ export default function AppointmentModal({ show, onClose, user, existingAppointm
     }
 
     const conflict = existingAppointments.find((appointment) => (
-      String(appointment.patientId) === String(user?.userId)
+      currentUserId != null && String(appointment.patientId) === String(currentUserId)
       && appointment.date === date
       && appointment.time === time
     ));
@@ -94,36 +97,74 @@ export default function AppointmentModal({ show, onClose, user, existingAppointm
 
   return (
     <div className="modal-backdrop">
-      <form onSubmit={handleSubmit} className="modal-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0 }}>New Appointment</h3>
-          <button type="button" onClick={onClose} className="icon-btn">✕</button>
-        </div>
-
-        <div style={{ marginTop: '.75rem' }}>
-          <label style={{ display: 'block', marginBottom: '.25rem' }}>Patient</label>
-          <input value={`${user?.firstName || ''} ${user?.lastName || ''}`.trim()} readOnly className="field-input" />
-        </div>
-
-        <div style={{ display: 'flex', gap: '.5rem', marginTop: '.75rem' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '.25rem' }}>Pick a date</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} min={minDate} className="field-input" />
+      <form onSubmit={handleSubmit} className="modal-card appointment-modal booking-modal">
+        <div className="appointment-modal-hero">
+          <div className="appointment-modal-hero-copy">
+            <div className="appointment-modal-eyebrow">New Appointment</div>
+            <h3 className="appointment-modal-title">Schedule a Visit</h3>
+            <p className="appointment-modal-subtitle">Choose a reason, date, and time for the patient visit.</p>
           </div>
-          <div style={{ width: 160 }}>
-            <label style={{ display: 'block', marginBottom: '.25rem' }}>Time</label>
-            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="field-input" />
+          <button type="button" onClick={onClose} className="icon-btn appointment-modal-close" aria-label="Close new appointment form">✕</button>
+        </div>
+
+        <div className="modal-summary-grid booking-summary-grid">
+          <div className="modal-summary-card">
+            <span>Patient</span>
+            <strong>{user?.email || `${user?.firstName || ''} ${user?.lastName || ''}`.trim()}</strong>
+          </div>
+          <div className="modal-summary-card">
+            <span>Default Reason</span>
+            <strong>General Consultation</strong>
+          </div>
+          <div className="modal-summary-card">
+            <span>Time Window</span>
+            <strong>Next available hour</strong>
           </div>
         </div>
 
-        <div style={{ marginTop: '.75rem' }}>
-          <label style={{ display: 'block', marginBottom: '.25rem' }}>Reason</label>
-          <input value={reason} onChange={(e) => setReason(e.target.value)} className="field-input" />
+        <div className="appointment-modal-grid booking-modal-grid">
+          <section className="appointment-modal-section">
+            <div className="appointment-modal-section-title">Visit Details</div>
+            <div className="booking-form-grid">
+              <div>
+                <label htmlFor="appointment-patient" className="modal-field-label">Patient</label>
+                <input id="appointment-patient" value={user?.email || `${user?.firstName || ''} ${user?.lastName || ''}`.trim()} readOnly className="field-input" />
+              </div>
+
+              <div className="booking-date-grid">
+                <div>
+                  <label htmlFor="appointment-date" className="modal-field-label">Pick a date</label>
+                  <input id="appointment-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} min={minDate} className="field-input" />
+                </div>
+                <div>
+                  <label htmlFor="appointment-time" className="modal-field-label">Time</label>
+                  <input id="appointment-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="field-input" />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="appointment-reason" className="modal-field-label">Reason</label>
+                <select id="appointment-reason" value={reason} onChange={(e) => setReason(e.target.value)} className="field-input">
+                  {reasonOptions.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section className="appointment-modal-section appointment-modal-section-accent">
+            <div className="appointment-modal-section-title">Preview</div>
+            <div className="booking-preview-card">
+              <span>Selected Reason</span>
+              <strong>{reason}</strong>
+              <p>{date && time ? `${date} at ${time}` : 'Pick a schedule to continue.'}</p>
+            </div>
+            {error && <div className="modal-error">{error}</div>}
+          </section>
         </div>
 
-        {error && <div style={{ color: '#b91c1c', marginTop: '.5rem' }}>{error}</div>}
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '.5rem', marginTop: '1rem' }}>
+        <div className="modal-actions-row">
           <button type="button" onClick={onClose} className="secondary-btn">Cancel</button>
           <button type="submit" className="primary-btn" disabled={isSaving}>{isSaving ? 'Booking...' : 'Book'}</button>
         </div>

@@ -1,5 +1,7 @@
 package edu.cit.redoble.features.record.entity;
 
+import edu.cit.redoble.features.appointment.entity.AppointmentEntity;
+import edu.cit.redoble.features.doctor.entity.DoctorEntity;
 import edu.cit.redoble.features.auth.entity.UserEntity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -15,10 +17,26 @@ public class MedicalRecordEntity {
     @Column(name = "patient_id", nullable = false)
     private Long patientId;
 
-        @ManyToOne(fetch = FetchType.LAZY, optional = false)
-        @JoinColumn(name = "patient_id", insertable = false, updatable = false,
-            foreignKey = @ForeignKey(name = "fk_medical_records_patient_id_users"))
-        private UserEntity patient;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "patient_id", insertable = false, updatable = false,
+        foreignKey = @ForeignKey(name = "fk_medical_records_patient_id_users"))
+    private UserEntity patient;
+
+    @Column(name = "appointment_id")
+    private Long appointmentId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "appointment_id", insertable = false, updatable = false,
+        foreignKey = @ForeignKey(name = "fk_medical_records_appointment_id_appointments"))
+    private AppointmentEntity appointment;
+
+    @Column(name = "doctor_id")
+    private Long doctorId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id", insertable = false, updatable = false,
+        foreignKey = @ForeignKey(name = "fk_medical_records_doctor_id_doctors"))
+    private DoctorEntity doctor;
 
     @Column(nullable = false)
     private String title;
@@ -28,6 +46,18 @@ public class MedicalRecordEntity {
 
     @Column(nullable = false)
     private String date;
+
+    @Column(name = "remarks", columnDefinition = "TEXT")
+    private String remarks;
+
+    @Column(name = "results", columnDefinition = "TEXT")
+    private String results;
+
+    @Column(name = "doctor_name")
+    private String doctorName;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -51,6 +81,38 @@ public class MedicalRecordEntity {
 
     public void setPatientId(Long patientId) {
         this.patientId = patientId;
+    }
+
+    public Long getAppointmentId() {
+        return appointmentId;
+    }
+
+    public void setAppointmentId(Long appointmentId) {
+        this.appointmentId = appointmentId;
+    }
+
+    public AppointmentEntity getAppointment() {
+        return appointment;
+    }
+
+    public void setAppointment(AppointmentEntity appointment) {
+        this.appointment = appointment;
+    }
+
+    public Long getDoctorId() {
+        return doctorId;
+    }
+
+    public void setDoctorId(Long doctorId) {
+        this.doctorId = doctorId;
+    }
+
+    public DoctorEntity getDoctor() {
+        return doctor;
+    }
+
+    public void setDoctor(DoctorEntity doctor) {
+        this.doctor = doctor;
     }
 
     public UserEntity getPatient() {
@@ -83,6 +145,38 @@ public class MedicalRecordEntity {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    public String getResults() {
+        return results;
+    }
+
+    public void setResults(String results) {
+        this.results = results;
+    }
+
+    public String getDoctorName() {
+        return doctorName;
+    }
+
+    public void setDoctorName(String doctorName) {
+        this.doctorName = doctorName;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
     }
 
     public LocalDateTime getCreatedAt() {

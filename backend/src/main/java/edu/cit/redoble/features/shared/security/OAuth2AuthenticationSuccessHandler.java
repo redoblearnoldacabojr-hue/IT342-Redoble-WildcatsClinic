@@ -63,7 +63,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 user.getFirstName(),
                 user.getLastName(),
                 user.getProvider().name(),
-                user.isStaff()
+            user.getRole()
         );
 
         if (oauth2SuccessRedirectUrl == null || oauth2SuccessRedirectUrl.isBlank()) {
@@ -82,7 +82,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 .queryParam("firstName", authResponse.getFirstName())
                 .queryParam("lastName", authResponse.getLastName())
                 .queryParam("provider", authResponse.getProvider())
-                .queryParam("isStaff", authResponse.isStaff())
+                .queryParam("role", authResponse.getRole())
                 .build()
                 .toUriString();
 
@@ -108,7 +108,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         user.setLastName(nameParts.lastName());
         user.setProvider(AuthProvider.GOOGLE);
         user.setProviderId(googleId);
-        user.setStaff(false);
+        user.setRole(1);
         return userRepository.save(user);
     }
 

@@ -40,7 +40,8 @@ public class JwtService {
         claims.put("firstName", user.getFirstName());
         claims.put("lastName", user.getLastName());
         claims.put("provider", user.getProvider().name());
-        claims.put("isStaff", user.isStaff());
+        claims.put("role", user.getRole());
+        claims.put("tv", user.getTokenVersion());
 
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(jwtExpirationMs);

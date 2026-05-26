@@ -1,5 +1,6 @@
 package edu.cit.redoble.features.appointment.entity;
 
+import edu.cit.redoble.features.doctor.entity.DoctorEntity;
 import edu.cit.redoble.features.auth.entity.UserEntity;
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -17,13 +18,10 @@ public class AppointmentEntity {
     @Column(name = "patient_id", nullable = false)
     private Long patientId;
 
-        @ManyToOne(fetch = FetchType.LAZY, optional = false)
-        @JoinColumn(name = "patient_id", insertable = false, updatable = false,
-            foreignKey = @ForeignKey(name = "fk_appointments_patient_id_users"))
-        private UserEntity patient;
-
-    @Column(name = "patient_name", nullable = false)
-    private String patientName;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "patient_id", insertable = false, updatable = false,
+        foreignKey = @ForeignKey(name = "fk_appointments_patient_id_users"))
+    private UserEntity patient;
 
     @Column(nullable = false)
     private LocalDate date;
@@ -34,12 +32,36 @@ public class AppointmentEntity {
     @Column(nullable = false)
     private String reason;
 
+    @Column(name = "doctor_id")
+    private Long doctorId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id", insertable = false, updatable = false,
+        foreignKey = @ForeignKey(name = "fk_appointments_doctor_id_doctors"))
+    private DoctorEntity doctor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AppointmentStatus status;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
+    @Column(name = "completion_remarks", columnDefinition = "TEXT")
+    private String completionRemarks;
+
+    @Column(name = "completion_results", columnDefinition = "TEXT")
+    private String completionResults;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();
+        if (status == null) {
+            status = AppointmentStatus.PROCESSING;
+        }
     }
 
     public Long getId() {
@@ -66,14 +88,6 @@ public class AppointmentEntity {
         this.patient = patient;
     }
 
-    public String getPatientName() {
-        return patientName;
-    }
-
-    public void setPatientName(String patientName) {
-        this.patientName = patientName;
-    }
-
     public LocalDate getDate() {
         return date;
     }
@@ -96,6 +110,54 @@ public class AppointmentEntity {
 
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    public Long getDoctorId() {
+        return doctorId;
+    }
+
+    public void setDoctorId(Long doctorId) {
+        this.doctorId = doctorId;
+    }
+
+    public DoctorEntity getDoctor() {
+        return doctor;
+    }
+
+    public void setDoctor(DoctorEntity doctor) {
+        this.doctor = doctor;
+    }
+
+    public AppointmentStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AppointmentStatus status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
+    }
+
+    public String getCompletionRemarks() {
+        return completionRemarks;
+    }
+
+    public void setCompletionRemarks(String completionRemarks) {
+        this.completionRemarks = completionRemarks;
+    }
+
+    public String getCompletionResults() {
+        return completionResults;
+    }
+
+    public void setCompletionResults(String completionResults) {
+        this.completionResults = completionResults;
     }
 
     public LocalDateTime getCreatedAt() {

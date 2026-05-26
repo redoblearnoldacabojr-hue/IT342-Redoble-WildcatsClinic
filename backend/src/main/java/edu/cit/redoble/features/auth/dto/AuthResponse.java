@@ -8,19 +8,19 @@ public class AuthResponse {
     private String firstName;
     private String lastName;
     private String provider;
-    private boolean isStaff;
+    private int role;
 
     public AuthResponse() {
     }
 
-    public AuthResponse(String token, Long userId, String email, String firstName, String lastName, String provider, boolean isStaff) {
+    public AuthResponse(String token, Long userId, String email, String firstName, String lastName, String provider, int role) {
         this.token = token;
         this.userId = userId;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.provider = provider;
-        this.isStaff = isStaff;
+        this.role = role;
     }
 
     public String getToken() {
@@ -71,11 +71,11 @@ public class AuthResponse {
         this.provider = provider;
     }
 
-    public boolean isStaff() {
-        return isStaff;
+    public int getRole() {
+        return role;
     }
 
-    public void setStaff(boolean staff) {
-        isStaff = staff;
+    public void setRole(int role) {
+        this.role = role;
     }
 }

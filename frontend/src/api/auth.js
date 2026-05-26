@@ -46,7 +46,7 @@ export function persistAuth(authResponse) {
     firstName: authResponse.firstName,
     lastName: authResponse.lastName,
     provider: authResponse.provider,
-    isStaff: authResponse.isStaff,
+    role: authResponse.role ?? 1,
   };
 
   localStorage.setItem(TOKEN_KEY, authResponse.token);
@@ -101,6 +101,25 @@ export async function getCurrentUser() {
   return data;
 }
 
+export async function logoutUser() {
+  const token = getStoredToken();
+  if (!token) {
+    return;
+  }
+
+  try {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    // Best effort: local auth is still cleared below.
+  }
+}
+
 export function startGoogleLogin() {
+  clearAuth();
   window.location.assign("/oauth2/authorization/google");
 }

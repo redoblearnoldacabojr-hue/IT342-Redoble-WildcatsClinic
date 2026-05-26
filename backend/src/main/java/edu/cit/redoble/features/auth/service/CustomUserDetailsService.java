@@ -1,8 +1,8 @@
 package edu.cit.redoble.features.auth.service;
 
 import edu.cit.redoble.features.auth.entity.UserEntity;
+import edu.cit.redoble.features.auth.entity.UserRole;
 import edu.cit.redoble.features.auth.repository.UserRepository;
-import edu.cit.redoble.features.shared.util.AdminAuthorizationService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,12 +13,9 @@ import org.springframework.stereotype.Service;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final AdminAuthorizationService adminAuthorizationService;
 
-    public CustomUserDetailsService(UserRepository userRepository,
-                                    AdminAuthorizationService adminAuthorizationService) {
+    public CustomUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.adminAuthorizationService = adminAuthorizationService;
     }
 
     @Override
@@ -32,8 +29,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         User.UserBuilder builder = User.withUsername(user.getEmail())
                 .password(password);
 
-        if (adminAuthorizationService.isAdminEmail(user.getEmail())) {
-            builder.roles("USER", "ADMIN");
+        int effectiveRole = user.getRole();
+
+        if (effectiveRole >= UserRole.ADMIN) {
+            builder.roles("USER", "STAFF", "ADMIN");
+        } else if (effectiveRole >= UserRole.STAFF) {
+            builder.roles("USER", "STAFF");
         } else {
             builder.roles("USER");
         }
