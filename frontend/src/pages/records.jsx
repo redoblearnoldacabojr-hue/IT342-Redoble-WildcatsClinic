@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useMemo, useState } from 'react';
 import { getStoredToken } from '../api/auth';
+import { apiFetch } from '../api/http';
 
 function emptyDraft(record = null) {
   return {
@@ -40,7 +41,7 @@ export default function RecordsPage({ user, canManage = false, canDelete = false
         setLoading(true);
         setErrorMessage('');
         const token = getStoredToken();
-        const res = await fetch('/api/records', {
+        const res = await apiFetch('/api/records', {
           method: 'GET',
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -86,7 +87,7 @@ export default function RecordsPage({ user, canManage = false, canDelete = false
       setIsSaving(true);
       setActionError('');
       const token = getStoredToken();
-      const res = await fetch(`/api/records/${selectedRecord.id}`, {
+      const res = await apiFetch(`/api/records/${selectedRecord.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +123,7 @@ export default function RecordsPage({ user, canManage = false, canDelete = false
     try {
       setActionError('');
       const token = getStoredToken();
-      const res = await fetch(`/api/records/${record.id}`, {
+      const res = await apiFetch(`/api/records/${record.id}`, {
         method: 'DELETE',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
