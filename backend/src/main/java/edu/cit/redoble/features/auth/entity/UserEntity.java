@@ -46,8 +46,11 @@ public class UserEntity {
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
 
-	@Column(name = "is_staff", nullable = false)
-	private boolean isStaff;
+	@Column(name = "role", nullable = false)
+	private int role;
+
+	@Column(name = "token_version", nullable = false)
+	private int tokenVersion;
 
 	@PrePersist
 	void onCreate() {
@@ -132,11 +135,19 @@ public class UserEntity {
 		this.updatedAt = updatedAt;
 	}
 
-	public boolean isStaff() {
-		return isStaff;
+	public int getRole() {
+		return role;
 	}
 
-	public void setStaff(boolean staff) {
-		isStaff = staff;
+	public void setRole(int role) {
+		this.role = role;
+	}
+
+	public int getTokenVersion() {
+		return tokenVersion;
+	}
+
+	public void setTokenVersion(int tokenVersion) {
+		this.tokenVersion = tokenVersion;
 	}
 }

@@ -4,10 +4,10 @@ import edu.cit.redoble.features.auth.dto.AuthResponse;
 import edu.cit.redoble.features.auth.dto.LoginRequest;
 import edu.cit.redoble.features.auth.dto.RegisterRequest;
 import edu.cit.redoble.features.auth.entity.AuthProvider;
+import edu.cit.redoble.features.auth.entity.UserRole;
 import edu.cit.redoble.features.auth.entity.UserEntity;
 import edu.cit.redoble.features.auth.repository.UserRepository;
 import edu.cit.redoble.features.shared.security.JwtService;
-import edu.cit.redoble.features.shared.util.AdminAuthorizationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,18 +24,15 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final AdminAuthorizationService adminAuthorizationService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
-                       JwtService jwtService,
-                       AdminAuthorizationService adminAuthorizationService) {
+                       JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
-        this.adminAuthorizationService = adminAuthorizationService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -50,7 +47,7 @@ public class AuthService {
         user.setLastName(request.getLastName().trim());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setProvider(AuthProvider.LOCAL);
-        user.setStaff(false);
+        user.setRole(UserRole.USER);
 
         UserEntity savedUser = userRepository.save(user);
         String token = jwtService.generateToken(savedUser);
@@ -97,15 +94,30 @@ public class AuthService {
         return toAuthResponse(user, token);
     }
 
-    public void updateStaffStatus(Long targetUserId, boolean staffStatus, String requesterEmail) {
-        if (!adminAuthorizationService.isAdminEmail(requesterEmail)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
+    public AuthResponse loginWithGooglePayload(String email, String displayName, String googleId) {
+        if (email == null || email.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google account email is not available");
         }
 
-        UserEntity targetUser = userRepository.findByEmail(String.valueOf(targetUserId))
+        NameParts nameParts = splitName(displayName);
+
+        UserEntity user = userRepository.findByEmail(email.toLowerCase())
+            .map(existing -> updateGoogleData(existing, googleId, nameParts))
+            .orElseGet(() -> createGoogleUser(email, nameParts, googleId));
+
+        String token = jwtService.generateToken(user);
+        return toAuthResponse(user, token);
+    }
+
+    public void updateRole(Long targetUserId, int role) {
+        if (role < UserRole.USER || role > UserRole.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role");
+        }
+
+        UserEntity targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        targetUser.setStaff(staffStatus);
+        targetUser.setRole(role);
         userRepository.save(targetUser);
     }
 
@@ -126,7 +138,7 @@ public class AuthService {
         user.setLastName(nameParts.lastName());
         user.setProvider(AuthProvider.GOOGLE);
         user.setProviderId(googleId);
-        user.setStaff(false);
+        user.setRole(UserRole.USER);
         return userRepository.save(user);
     }
 
@@ -153,7 +165,7 @@ public class AuthService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getProvider().name(),
-                user.isStaff()
+                user.getRole()
         );
     }
 
