@@ -492,10 +492,10 @@ function PortalShell({
         <div>
           <div className="dashboard-brand">
             <div className="dashboard-brand-mark dashboard-brand-logo-wrap">
-              <img src={clinicLogo} alt="Wildcat Clinic logo" className="dashboard-brand-logo" />
+              <img src={clinicLogo} alt="WildcatsClinic logo" className="dashboard-brand-logo" />
             </div>
             <div>
-              <div style={{ fontSize: '.8rem', letterSpacing: '.12em', textTransform: 'uppercase', opacity: 0.75 }}>Wildcat Clinic</div>
+              <div style={{ fontSize: '.8rem', letterSpacing: '.12em', textTransform: 'uppercase', opacity: 0.75 }}>WildcatsClinic</div>
               <h2 style={{ margin: 0 }}>{hasStaffAccess ? 'Staff Portal' : 'Patient Portal'}</h2>
             </div>
           </div>

@@ -39,11 +39,11 @@ const LoginPage = ({ onNavigateToRegister, onAuthSuccess }) => {
       {/* Left Side - Branding */}
       <div className="brand-side">
         <div className="logo-container">
-          <div className="logo-circle">
-            <img src={clinicLogo} alt="Wildcat Clinic logo" className="logo-image" />
+            <div className="logo-circle">
+            <img src={clinicLogo} alt="WildcatsClinic logo" className="logo-image" />
           </div>
         </div>
-        <h1 className="brand-title">Wildcats Clinic</h1>
+        <h1 className="brand-title">WildcatsClinic</h1>
       </div>
 
       {/* Right Side - Login Form */}

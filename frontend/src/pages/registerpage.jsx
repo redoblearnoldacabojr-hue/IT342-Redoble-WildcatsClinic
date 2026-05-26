@@ -59,11 +59,11 @@ const RegisterPage = ({ onNavigateToLogin }) => {
 
       <div className="register-brand-side">
         <div className="register-logo-container">
-          <div className="register-logo-circle">
-            <img src={clinicLogo} alt="Wildcat Clinic logo" className="register-logo-image" />
+            <div className="register-logo-circle">
+            <img src={clinicLogo} alt="WildcatsClinic logo" className="register-logo-image" />
           </div>
         </div>
-        <h1 className="register-brand-title">Wildcats Clinic</h1>
+        <h1 className="register-brand-title">WildcatsClinic</h1>
       </div>
 
       <div className="register-form-side">
