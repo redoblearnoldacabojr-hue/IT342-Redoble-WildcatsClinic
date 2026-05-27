@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,11 +38,14 @@ public class AuthController {
     private final AuthService authService;
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final String googleClientId;
 
-    public AuthController(AuthService authService, UserRepository userRepository, JwtService jwtService) {
+    public AuthController(AuthService authService, UserRepository userRepository, JwtService jwtService,
+                          @Value("${spring.security.oauth2.client.registration.google.client-id:}") String googleClientId) {
         this.authService = authService;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
+        this.googleClientId = googleClientId;
     }
 
     @PostMapping("/google")
@@ -55,7 +59,9 @@ public class AuthController {
             var transport = GoogleNetHttpTransport.newTrustedTransport();
             var jsonFactory = JacksonFactory.getDefaultInstance();
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
-                    .setAudience(Collections.emptyList()) // allow any audience; backend should verify client id if desired
+                    .setAudience(googleClientId == null || googleClientId.isBlank()
+                        ? Collections.emptyList()
+                        : Collections.singletonList(googleClientId))
                     .build();
 
             GoogleIdToken idToken = verifier.verify(idTokenString);
