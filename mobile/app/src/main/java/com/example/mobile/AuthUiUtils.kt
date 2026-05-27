@@ -98,13 +98,15 @@ fun persistAuthSession(context: Context, session: AuthSession) {
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
-    securePrefs.edit().putString("jwt_token", session.token).apply()
-    securePrefs.edit().putLong("user_id", session.userId).apply()
-    securePrefs.edit().putInt("user_role", session.role).apply()
-    securePrefs.edit().putString("user_email", session.email).apply()
-    securePrefs.edit().putString("user_first_name", session.firstName).apply()
-    securePrefs.edit().putString("user_last_name", session.lastName).apply()
-    securePrefs.edit().putString("user_provider", session.provider).apply()
+    securePrefs.edit()
+        .putString("jwt_token", session.token)
+        .putLong("user_id", session.userId)
+        .putInt("user_role", session.role)
+        .putString("user_email", session.email)
+        .putString("user_first_name", session.firstName)
+        .putString("user_last_name", session.lastName)
+        .putString("user_provider", session.provider)
+        .commit()
 }
 
 fun completeAuthenticatedSession(context: Context, session: AuthSession): Boolean {
@@ -114,8 +116,8 @@ fun completeAuthenticatedSession(context: Context, session: AuthSession): Boolea
     }
 
     persistAuthSession(context, session)
-    registerDeviceToken(context, session.token)
-    openMainActivity(context)
+    runCatching { registerDeviceToken(context, session.token) }
+        .onFailure { ex -> Log.w("AuthUiUtils", "Skipping device registration after sign-in", ex) }
     return true
 }
 

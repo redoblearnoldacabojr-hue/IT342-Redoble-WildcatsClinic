@@ -28,7 +28,6 @@ class GoogleSignInActivity : AppCompatActivity() {
     private lateinit var client: OkHttpClient
     private lateinit var loadingOverlay: View
     private lateinit var loadingText: TextView
-    private var waitingForBrowserAuth = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,15 +87,9 @@ class GoogleSignInActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
-        if (waitingForBrowserAuth) {
-            waitingForBrowserAuth = false
-            setLoading(false)
-        }
     }
 
     private fun startGoogleFlow() {
-        waitingForBrowserAuth = true
         setLoading(true, "Opening Google sign-in in your browser...")
 
         val authUri = Uri.parse("${BuildConfig.BACKEND_URL}/api/auth/google/start")
@@ -111,7 +104,6 @@ class GoogleSignInActivity : AppCompatActivity() {
         try {
             startActivity(intent)
         } catch (_: ActivityNotFoundException) {
-            waitingForBrowserAuth = false
             setLoading(false)
             findViewById<TextView>(R.id.login_status_text).apply {
                 visibility = View.VISIBLE
@@ -208,8 +200,18 @@ class GoogleSignInActivity : AppCompatActivity() {
                     Log.w(TAG, "Blocked mobile access for role ${session.role}")
                     return@Thread
                 }
+
+                runOnUiThread {
+                    setLoading(false)
+                    openMainActivity(this@GoogleSignInActivity)
+                    finish()
+                }
             } catch (ex: Exception) {
-                runOnUiThread { setLoading(false) }
+                runOnUiThread {
+                    setLoading(false)
+                    statusText.visibility = View.VISIBLE
+                    statusText.text = "Login failed: ${ex.message ?: "unknown error"}"
+                }
                 Log.e(TAG, "Login error", ex)
             }
         }.start()

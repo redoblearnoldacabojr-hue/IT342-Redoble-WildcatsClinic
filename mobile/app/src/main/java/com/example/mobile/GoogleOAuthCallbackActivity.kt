@@ -9,8 +9,8 @@ class GoogleOAuthCallbackActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val data = intent?.data
-        val errorMessage = extractOAuthErrorMessage(data)
-        if (!errorMessage.isNullOrBlank()) {
+        val oauthError = extractOAuthErrorMessage(data)
+        if (!oauthError.isNullOrBlank()) {
             openLoginActivity(this, "Google sign-in was canceled or denied.")
             finish()
             return
@@ -28,6 +28,7 @@ class GoogleOAuthCallbackActivity : AppCompatActivity() {
             finish()
             return
         }
+        openMainActivity(this)
 
         finish()
     }
