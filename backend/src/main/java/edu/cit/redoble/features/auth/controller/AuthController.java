@@ -13,12 +13,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.HashMap;
@@ -28,12 +31,22 @@ import edu.cit.redoble.features.auth.dto.GoogleSignInRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final String MOBILE_OAUTH_REDIRECT_SESSION_ATTRIBUTE = "mobile_oauth_redirect_uri";
+    private static final String MOBILE_OAUTH_REDIRECT_URI = "wildcatclinic://auth/google";
+    private static final String KEY_USER_ID = "userId";
+    private static final String KEY_ID = "id";
+    private static final String KEY_EMAIL = "email";
+    private static final String KEY_FIRST_NAME = "firstName";
+    private static final String KEY_LAST_NAME = "lastName";
+    private static final String KEY_PROVIDER = "provider";
+    private static final String KEY_ROLE = "role";
 
     private final AuthService authService;
     private final UserRepository userRepository;
@@ -48,6 +61,23 @@ public class AuthController {
         this.googleClientId = googleClientId;
     }
 
+    @GetMapping("/google/start")
+    public void startGoogleSignIn(@RequestParam(value = "redirect_uri", required = false) String redirectUri,
+                                  HttpServletRequest request,
+                                  HttpServletResponse response) throws java.io.IOException {
+        if (redirectUri != null && !redirectUri.isBlank()) {
+            String normalizedRedirectUri = redirectUri.trim();
+            if (!MOBILE_OAUTH_REDIRECT_URI.equals(normalizedRedirectUri)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid redirect_uri");
+            }
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute(MOBILE_OAUTH_REDIRECT_SESSION_ATTRIBUTE, normalizedRedirectUri);
+        }
+
+        response.sendRedirect("/oauth2/authorization/google");
+    }
+
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> googleSignIn(@RequestBody GoogleSignInRequest request) {
         String idTokenString = request == null ? null : request.getIdToken();
@@ -57,7 +87,7 @@ public class AuthController {
 
         try {
             var transport = GoogleNetHttpTransport.newTrustedTransport();
-            var jsonFactory = JacksonFactory.getDefaultInstance();
+            var jsonFactory = GsonFactory.getDefaultInstance();
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
                     .setAudience(googleClientId == null || googleClientId.isBlank()
                         ? Collections.emptyList()
@@ -118,13 +148,13 @@ public class AuthController {
         if (userLookup.isPresent()) {
             UserEntity user = userLookup.get();
             return ResponseEntity.ok(Map.of(
-                    "userId", user.getId(),
-                    "id", user.getId(),
-                    "email", user.getEmail(),
-                    "firstName", user.getFirstName(),
-                    "lastName", user.getLastName(),
-                    "provider", user.getProvider().name(),
-                    "role", user.getRole()
+                    KEY_USER_ID, user.getId(),
+                    KEY_ID, user.getId(),
+                    KEY_EMAIL, user.getEmail(),
+                    KEY_FIRST_NAME, user.getFirstName(),
+                    KEY_LAST_NAME, user.getLastName(),
+                    KEY_PROVIDER, user.getProvider().name(),
+                    KEY_ROLE, user.getRole()
             ));
         }
 
@@ -135,19 +165,19 @@ public class AuthController {
 
         Map<String, Object> claims = jwtService.extractClaim(token, claimsMap -> new HashMap<>(claimsMap));
         Object uid = claims.get("uid");
-        Object firstName = claims.getOrDefault("firstName", "");
-        Object lastName = claims.getOrDefault("lastName", "");
-        Object provider = claims.getOrDefault("provider", "LOCAL");
-        Object role = claims.getOrDefault("role", 1);
+        Object firstName = claims.getOrDefault(KEY_FIRST_NAME, "");
+        Object lastName = claims.getOrDefault(KEY_LAST_NAME, "");
+        Object provider = claims.getOrDefault(KEY_PROVIDER, "LOCAL");
+        Object role = claims.getOrDefault(KEY_ROLE, 1);
 
         return ResponseEntity.ok(Map.of(
-            "userId", uid == null ? null : Long.valueOf(String.valueOf(uid)),
-                "id", uid == null ? null : Long.valueOf(String.valueOf(uid)),
-                "email", email,
-                "firstName", String.valueOf(firstName),
-                "lastName", String.valueOf(lastName),
-                "provider", String.valueOf(provider),
-            "role", Integer.parseInt(String.valueOf(role))
+            KEY_USER_ID, uid == null ? null : Long.valueOf(String.valueOf(uid)),
+                KEY_ID, uid == null ? null : Long.valueOf(String.valueOf(uid)),
+                KEY_EMAIL, email,
+                KEY_FIRST_NAME, String.valueOf(firstName),
+                KEY_LAST_NAME, String.valueOf(lastName),
+                KEY_PROVIDER, String.valueOf(provider),
+            KEY_ROLE, Integer.parseInt(String.valueOf(role))
         ));
     }
 
@@ -172,7 +202,7 @@ public class AuthController {
         }
 
         if (authentication != null && authentication.getPrincipal() instanceof OAuth2User oAuth2User) {
-            String email = oAuth2User.getAttribute("email");
+            String email = oAuth2User.getAttribute(KEY_EMAIL);
             if (email != null && !email.isBlank()) {
                 return email.trim().toLowerCase();
             }

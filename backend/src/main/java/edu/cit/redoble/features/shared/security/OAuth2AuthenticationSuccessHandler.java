@@ -8,6 +8,7 @@ import edu.cit.redoble.features.auth.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -19,6 +20,9 @@ import java.io.IOException;
 
 @Component
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+
+    private static final String MOBILE_OAUTH_REDIRECT_SESSION_ATTRIBUTE = "mobile_oauth_redirect_uri";
+    private static final String MOBILE_OAUTH_REDIRECT_URI = "wildcatclinic://auth/google";
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
@@ -66,7 +70,9 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             user.getRole()
         );
 
-        if (oauth2SuccessRedirectUrl == null || oauth2SuccessRedirectUrl.isBlank()) {
+        String redirectBaseUrl = resolveRedirectBaseUrl(request);
+
+        if (redirectBaseUrl == null || redirectBaseUrl.isBlank()) {
             response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
@@ -75,7 +81,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         }
 
         String redirectUrl = UriComponentsBuilder
-                .fromUriString(oauth2SuccessRedirectUrl)
+            .fromUriString(redirectBaseUrl)
                 .queryParam("token", authResponse.getToken())
                 .queryParam("userId", authResponse.getUserId())
                 .queryParam("email", authResponse.getEmail())
@@ -87,6 +93,23 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 .toUriString();
 
         response.sendRedirect(redirectUrl);
+    }
+
+    private String resolveRedirectBaseUrl(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Object mobileRedirect = session.getAttribute(MOBILE_OAUTH_REDIRECT_SESSION_ATTRIBUTE);
+            session.removeAttribute(MOBILE_OAUTH_REDIRECT_SESSION_ATTRIBUTE);
+
+            if (mobileRedirect instanceof String redirectUri) {
+                String normalizedRedirectUri = redirectUri.trim();
+                if (MOBILE_OAUTH_REDIRECT_URI.equals(normalizedRedirectUri)) {
+                    return normalizedRedirectUri;
+                }
+            }
+        }
+
+        return oauth2SuccessRedirectUrl;
     }
 
     private UserEntity updateGoogleUser(UserEntity user, String googleId, NameParts nameParts) {
