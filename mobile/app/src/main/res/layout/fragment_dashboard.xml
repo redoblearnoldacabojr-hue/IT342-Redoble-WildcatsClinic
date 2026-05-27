@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="0dp">
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -101,12 +101,14 @@
         </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
+            android:id="@+id/dashboard_stats_patient"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:orientation="horizontal">
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_next_appointment"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -123,6 +125,7 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tv_next_appointment_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Appointments"
@@ -130,10 +133,11 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/tv_next_appointment_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="12"
+                        android:text="--"
                         android:textColor="@color/wildcat_text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -141,6 +145,7 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_records_count"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -157,6 +162,7 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tv_records_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Records"
@@ -164,10 +170,11 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/tv_records_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="24"
+                        android:text="--"
                         android:textColor="@color/wildcat_text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -176,12 +183,14 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/dashboard_stats_staff"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:orientation="horizontal">
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_notifications_count"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -198,6 +207,7 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tv_notifications_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Notifications"
@@ -205,10 +215,11 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/tv_notifications_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="3"
+                        android:text="--"
                         android:textColor="@color/wildcat_text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -216,6 +227,7 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_doctors_in_count"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -232,6 +244,7 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tv_doctors_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Doctors In"
@@ -239,10 +252,11 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/tv_doctors_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="8"
+                        android:text="--"
                         android:textColor="@color/wildcat_text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -251,6 +265,7 @@
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_next_visit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
@@ -266,6 +281,7 @@
                 android:padding="18dp">
 
                 <TextView
+                    android:id="@+id/tv_next_visit_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Next Appointment"
@@ -275,6 +291,7 @@
                     android:letterSpacing="0.12" />
 
                 <TextView
+                    android:id="@+id/tv_next_visit_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
@@ -284,6 +301,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_next_visit_note"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
