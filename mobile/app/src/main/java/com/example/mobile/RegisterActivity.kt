@@ -16,13 +16,19 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
+import android.view.WindowManager
 
 class RegisterActivity : AppCompatActivity() {
     private lateinit var client: OkHttpClient
+    private lateinit var loadingOverlay: View
+    private lateinit var loadingText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
+
+        loadingOverlay = findViewById(R.id.loading_overlay)
+        loadingText = findViewById(R.id.loading_text)
 
         val logging = HttpLoggingInterceptor()
         logging.level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
@@ -46,6 +52,14 @@ class RegisterActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.btn_go_login).apply {
             paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
         }
+    }
+
+    private fun setLoading(show: Boolean, message: String = "Processing...") {
+        loadingText.text = message
+        loadingOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        findViewById<MaterialButton>(R.id.btn_create_account).isEnabled = !show
+        findViewById<MaterialButton>(R.id.btn_google_signup).isEnabled = !show
+        findViewById<TextView>(R.id.btn_go_login).isEnabled = !show
     }
 
     private fun performRegister() {
@@ -110,12 +124,15 @@ class RegisterActivity : AppCompatActivity() {
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
         val req = Request.Builder().url(registerUrl).post(body).build()
 
+        setLoading(true, "Creating account...")
+
         Thread {
             try {
                 val resp = client.newCall(req).execute()
                 if (!resp.isSuccessful) {
                     val errorMessage = resp.body?.string().orEmpty().ifBlank { "Registration failed. Please try again." }
                     runOnUiThread {
+                        setLoading(false)
                         statusText.visibility = View.VISIBLE
                         statusText.text = extractServerErrorMessage(errorMessage, "Registration failed. Please try again.")
                     }
@@ -123,6 +140,7 @@ class RegisterActivity : AppCompatActivity() {
                 }
 
                 runOnUiThread {
+                    setLoading(false)
                     statusText.visibility = View.VISIBLE
                     statusText.text = "Registration successful. Redirecting to login..."
                 }
@@ -132,6 +150,7 @@ class RegisterActivity : AppCompatActivity() {
                 }, 1200)
             } catch (ex: Exception) {
                 runOnUiThread {
+                    setLoading(false)
                     statusText.visibility = View.VISIBLE
                     statusText.text = "Registration failed. Please try again."
                 }

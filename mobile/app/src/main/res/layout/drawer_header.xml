@@ -22,6 +22,7 @@
             android:src="@drawable/logo_frontend" />
 
         <TextView
+            android:id="@+id/drawer_user_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
@@ -31,12 +32,28 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/drawer_user_email"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="Mobile clinic dashboard"
             android:textColor="#E7D8DA"
             android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/drawer_user_role"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@android:color/white"
+            android:paddingLeft="10dp"
+            android:paddingTop="4dp"
+            android:paddingRight="10dp"
+            android:paddingBottom="4dp"
+            android:text="User"
+            android:textColor="@color/wildcat_burgundy"
+            android:textSize="11sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
 </LinearLayout>

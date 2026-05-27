@@ -1,5 +1,8 @@
 package com.example.mobile
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.util.Patterns
@@ -9,13 +12,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowCompat
 import android.widget.TextView
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.security.crypto.MasterKey
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.common.api.ApiException
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import okhttp3.MediaType.Companion.toMediaType
@@ -24,38 +21,21 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.android.material.textfield.TextInputLayout
 
 class GoogleSignInActivity : AppCompatActivity() {
     private val TAG = "GoogleSignInActivity"
     private lateinit var client: OkHttpClient
-    private lateinit var signInClient: GoogleSignInClient
-
-    private val startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            val idToken = account?.idToken
-            if (idToken != null) {
-                exchangeTokenWithBackend(idToken)
-            }
-        } catch (e: ApiException) {
-            Log.w(TAG, "Google sign in failed", e)
-        }
-    }
+    private lateinit var loadingOverlay: View
+    private lateinit var loadingText: TextView
+    private var waitingForBrowserAuth = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // If a JWT is already stored, skip signin and open main
-        val existing = getStoredToken(this)
-        if (!existing.isNullOrBlank()) {
-            openMainActivity(this)
-            finish()
-            return
-        }
-
         setContentView(R.layout.activity_google_signin)
+
+        loadingOverlay = findViewById(R.id.loading_overlay)
+        loadingText = findViewById(R.id.loading_text)
 
         // Edge-to-edge content so UI fills the whole screen
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -70,13 +50,11 @@ class GoogleSignInActivity : AppCompatActivity() {
         logging.level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
         client = OkHttpClient.Builder().addInterceptor(logging).build()
 
-        val serverClientId = getString(R.string.server_client_id)
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .requestIdToken(serverClientId)
-            .build()
-
-        signInClient = GoogleSignIn.getClient(this, gso)
+        val existingToken = getStoredToken(this)
+        if (!existingToken.isNullOrBlank()) {
+            validateStoredSession(existingToken)
+            return
+        }
 
         findViewById<MaterialButton>(R.id.btn_login).setOnClickListener {
             performEmailLogin()
@@ -96,14 +74,58 @@ class GoogleSignInActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.btn_go_register).setOnLongClickListener { true }
 
+        val statusText = findViewById<TextView>(R.id.login_status_text)
+
+        intent.getStringExtra(EXTRA_AUTH_ERROR)?.takeIf { it.isNotBlank() }?.let { errorMessage ->
+            statusText.visibility = View.VISIBLE
+            statusText.text = errorMessage
+        }
+
         if (intent.getBooleanExtra(EXTRA_AUTOSTART_GOOGLE, false)) {
             startGoogleFlow()
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        if (waitingForBrowserAuth) {
+            waitingForBrowserAuth = false
+            setLoading(false)
+        }
+    }
+
     private fun startGoogleFlow() {
-        val intent = signInClient.signInIntent
-        startForResult.launch(intent)
+        waitingForBrowserAuth = true
+        setLoading(true, "Opening Google sign-in in your browser...")
+
+        val authUri = Uri.parse("${BuildConfig.BACKEND_URL}/api/auth/google/start")
+            .buildUpon()
+            .appendQueryParameter("redirect_uri", GOOGLE_OAUTH_REDIRECT_URI)
+            .build()
+
+        val intent = Intent(Intent.ACTION_VIEW, authUri).apply {
+            addCategory(Intent.CATEGORY_BROWSABLE)
+        }
+
+        try {
+            startActivity(intent)
+        } catch (_: ActivityNotFoundException) {
+            waitingForBrowserAuth = false
+            setLoading(false)
+            findViewById<TextView>(R.id.login_status_text).apply {
+                visibility = View.VISIBLE
+                text = "No browser app was found to continue Google sign-in."
+            }
+        }
+    }
+
+    private fun setLoading(show: Boolean, message: String = "Processing...") {
+        loadingText.text = message
+        loadingOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        findViewById<MaterialButton>(R.id.btn_login).isEnabled = !show
+        findViewById<MaterialButton>(R.id.btn_google_signin).isEnabled = !show
+        findViewById<TextView>(R.id.btn_go_register).isEnabled = !show
     }
 
     private fun performEmailLogin() {
@@ -148,6 +170,8 @@ class GoogleSignInActivity : AppCompatActivity() {
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
         val req = Request.Builder().url(loginUrl).post(body).build()
 
+        setLoading(true, "Signing in...")
+
         Thread {
             try {
                 val resp = client.newCall(req).execute()
@@ -155,6 +179,7 @@ class GoogleSignInActivity : AppCompatActivity() {
                 if (!resp.isSuccessful || respBody.isNullOrBlank()) {
                     val errorMessage = extractServerErrorMessage(respBody, "Invalid credentials or server error.")
                     runOnUiThread {
+                        setLoading(false)
                         statusText.visibility = View.VISIBLE
                         statusText.text = errorMessage
                     }
@@ -165,6 +190,7 @@ class GoogleSignInActivity : AppCompatActivity() {
                 val session = parseAuthSession(respBody)
                 if (session == null) {
                     runOnUiThread {
+                        setLoading(false)
                         statusText.visibility = View.VISIBLE
                         statusText.text = "Unable to start your session."
                     }
@@ -172,9 +198,18 @@ class GoogleSignInActivity : AppCompatActivity() {
                     return@Thread
                 }
 
-                persistAuthSession(this@GoogleSignInActivity, session)
-                openMainActivity(this@GoogleSignInActivity)
+                if (!completeAuthenticatedSession(this@GoogleSignInActivity, session)) {
+                    runOnUiThread {
+                        setLoading(false)
+                        clearAuthSession(this@GoogleSignInActivity)
+                        statusText.visibility = View.VISIBLE
+                        statusText.text = "Staff and admin accounts must use the web app on a desktop or laptop."
+                    }
+                    Log.w(TAG, "Blocked mobile access for role ${session.role}")
+                    return@Thread
+                }
             } catch (ex: Exception) {
+                runOnUiThread { setLoading(false) }
                 Log.e(TAG, "Login error", ex)
             }
         }.start()
@@ -184,118 +219,87 @@ class GoogleSignInActivity : AppCompatActivity() {
         startActivity(android.content.Intent(this, RegisterActivity::class.java))
     }
 
-    private fun exchangeTokenWithBackend(idToken: String) {
-        val backendBaseUrl = BuildConfig.BACKEND_URL
-        val backendUrl = "$backendBaseUrl/api/auth/google"
+    private fun validateStoredSession(token: String) {
         val statusText = findViewById<TextView>(R.id.login_status_text)
-        val json = JSONObject()
-            .put("idToken", idToken)
-            .toString()
-        val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
-        val req = Request.Builder().url(backendUrl).post(body).build()
+        val cachedRole = getStoredRole(this)
+
+        if (cachedRole != null) {
+            if (canUseMobileApp(cachedRole)) {
+                openMainActivity(this)
+            } else {
+                clearAuthSession(this)
+                statusText.visibility = View.VISIBLE
+                statusText.text = "Staff and admin accounts must use the web app on a desktop or laptop."
+            }
+            return
+        }
 
         Thread {
             try {
-                val resp = client.newCall(req).execute()
-                if (!resp.isSuccessful) {
-                    val errorBody = resp.body?.string()
-                    val errorMessage = extractServerErrorMessage(errorBody, "Google sign-in failed. Please try again.")
+                val request = Request.Builder()
+                    .url(BuildConfig.BACKEND_URL + "/api/auth/me")
+                    .get()
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+                val response = client.newCall(request).execute()
+                val body = response.body?.string().orEmpty()
+
+                if (!response.isSuccessful) {
                     runOnUiThread {
+                        setLoading(false)
+                        clearAuthSession(this)
                         statusText.visibility = View.VISIBLE
-                        statusText.text = errorMessage
+                        statusText.text = extractServerErrorMessage(body, "Session expired. Please sign in again.")
                     }
-                    Log.e(TAG, "Backend exchange failed: ${resp.code}")
                     return@Thread
                 }
-                val respBody = resp.body?.string()
-                if (respBody != null) {
-                    try {
-                        val session = parseAuthSession(respBody)
-                        if (session != null) {
-                            persistAuthSession(this@GoogleSignInActivity, session)
-                            Log.i(TAG, "Stored auth token securely")
-                            openMainActivity(this@GoogleSignInActivity)
-                        } else {
-                            runOnUiThread {
-                                statusText.visibility = View.VISIBLE
-                                statusText.text = "Google sign-in response was incomplete."
-                            }
-                            Log.e(TAG, "Empty response body from backend exchange")
-                            return@Thread
-                        }
 
-                        // After storing JWT, attempt to obtain FCM token and register it with backend
-                        try {
-                            val masterKey = MasterKey.Builder(this@GoogleSignInActivity)
-                                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                                .build()
+                val session = runCatching {
+                    val json = JSONObject(body)
+                    AuthSession(
+                        token = token,
+                        userId = json.optLong("userId", json.optLong("id", -1L)),
+                        email = json.optString("email", ""),
+                        firstName = json.optString("firstName", ""),
+                        lastName = json.optString("lastName", ""),
+                        provider = json.optString("provider", "LOCAL"),
+                        role = json.optInt("role", 1)
+                    )
+                }.getOrNull()
 
-                            val securePrefs = androidx.security.crypto.EncryptedSharedPreferences.create(
-                                this@GoogleSignInActivity,
-                                "secure_prefs",
-                                masterKey,
-                                androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                                androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                            )
-
-                            val jwtStored = securePrefs.getString("jwt_token", null)
-                            if (jwtStored != null) {
-                                FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        val fcmToken = task.result
-                                        if (!fcmToken.isNullOrBlank()) {
-                                            val deviceJson = JSONObject()
-                                            deviceJson.put("token", fcmToken)
-                                            deviceJson.put("platform", "android")
-                                            val deviceBody = deviceJson.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
-                                            val deviceReq = Request.Builder()
-                                                .url("$backendBaseUrl/api/devices")
-                                                .post(deviceBody)
-                                                .addHeader("Authorization", "Bearer $jwtStored")
-                                                .build()
-
-                                            Thread {
-                                                try {
-                                                    val deviceResp = client.newCall(deviceReq).execute()
-                                                    if (deviceResp.isSuccessful) {
-                                                        Log.i(TAG, "Registered device token with backend")
-                                                    } else {
-                                                        Log.e(TAG, "Failed to register device token: ${'$'}{deviceResp.code}")
-                                                    }
-                                                } catch (ex: Exception) {
-                                                    Log.e(TAG, "Error registering device token", ex)
-                                                }
-                                            }.start()
-                                        }
-                                    } else {
-                                        Log.w(TAG, "Unable to fetch FCM token", task.exception)
-                                    }
-                                }
-                            }
-                        } catch (ex: Exception) {
-                            Log.e(TAG, "Failed obtaining or registering FCM token", ex)
-                        }
-                    } catch (ex: Exception) {
-                        Log.e(TAG, "Failed parsing auth response", ex)
-                    }
-                } else {
-                    runOnUiThread {
-                        statusText.visibility = View.VISIBLE
-                        statusText.text = "Google sign-in response was empty."
-                    }
-                    Log.e(TAG, "Empty response body from backend exchange")
-                }
-            } catch (ex: Exception) {
                 runOnUiThread {
-                    statusText.visibility = View.VISIBLE
-                    statusText.text = "Google sign-in failed. Check your connection and try again."
+                    if (session == null) {
+                        setLoading(false)
+                        clearAuthSession(this)
+                        statusText.visibility = View.VISIBLE
+                        statusText.text = "Unable to verify your session. Please sign in again."
+                        return@runOnUiThread
+                    }
+
+                    if (canUseMobileApp(session.role)) {
+                        persistAuthSession(this, session)
+                        openMainActivity(this)
+                    } else {
+                        setLoading(false)
+                        clearAuthSession(this)
+                        statusText.visibility = View.VISIBLE
+                        statusText.text = "Staff and admin accounts must use the web app on a desktop or laptop."
+                    }
                 }
-                Log.e(TAG, "Exchange error", ex)
+            } catch (_: Exception) {
+                runOnUiThread {
+                    setLoading(false)
+                    clearAuthSession(this)
+                    statusText.visibility = View.VISIBLE
+                    statusText.text = "Unable to verify your session. Please sign in again."
+                }
             }
         }.start()
     }
 
     companion object {
         const val EXTRA_AUTOSTART_GOOGLE = "extra_autostart_google"
+        const val EXTRA_AUTH_ERROR = "extra_auth_error"
+        const val GOOGLE_OAUTH_REDIRECT_URI = "wildcatclinic://auth/google"
     }
 }

@@ -18,29 +18,30 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/wildcat_burgundy"
-            android:minHeight="64dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
+            android:minHeight="56dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
             android:titleTextColor="@android:color/white"
             app:navigationIconTint="@android:color/white"
             app:titleCentered="false"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
-        <com.google.android.material.card.MaterialCardView
+        <FrameLayout
+            android:id="@+id/content_frame"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:cardBackgroundColor="@color/wildcat_surface"
-            app:cardCornerRadius="0dp"
-            app:cardElevation="0dp"
-            app:cardUseCompatPadding="false">
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/wildcat_surface" />
 
-            <FrameLayout
-                android:id="@+id/content_frame"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/wildcat_surface" />
-        </com.google.android.material.card.MaterialCardView>
-
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_navigation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/wildcat_surface"
+            app:itemIconTint="@color/wildcat_burgundy"
+            app:itemTextColor="@color/wildcat_burgundy"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/bottom_nav_menu" />
     </LinearLayout>
 
     <com.google.android.material.navigation.NavigationView

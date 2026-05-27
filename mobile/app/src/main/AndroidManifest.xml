@@ -21,6 +21,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.example.mobile.GoogleOAuthCallbackActivity"
+            android:exported="true"
+            android:noHistory="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="auth"
+                    android:path="/google"
+                    android:scheme="wildcatclinic" />
+            </intent-filter>
+        </activity>
         <activity android:name=".MainActivity" android:exported="true" />
         <activity android:name="com.example.mobile.RegisterActivity" />
     </application>

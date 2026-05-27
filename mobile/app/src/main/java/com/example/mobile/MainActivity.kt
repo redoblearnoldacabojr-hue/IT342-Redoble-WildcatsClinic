@@ -11,12 +11,21 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import androidx.fragment.app.commit
 import android.view.MenuItem
-import androidx.appcompat.widget.Toolbar
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val storedRole = getStoredRole(this)
+        if (storedRole != null && !canUseMobileApp(storedRole)) {
+            clearAuthSession(this)
+            openLoginActivity(this)
+            finish()
+            return
+        }
+
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
@@ -30,17 +39,38 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.setHomeButtonEnabled(true)
 
         val nav = findViewById<NavigationView>(R.id.navigation_view)
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+        val header = nav.getHeaderView(0)
+        val nameView = header.findViewById<TextView>(R.id.drawer_user_name)
+        val emailView = header.findViewById<TextView>(R.id.drawer_user_email)
+        val roleView = header.findViewById<TextView>(R.id.drawer_user_role)
+
+        nameView.text = getStoredDisplayName(this) ?: "WildcatsClinic User"
+        emailView.text = getStoredEmail(this) ?: ""
+        roleView.text = when (getStoredRole(this) ?: 1) {
+            1 -> "User"
+            2 -> "Staff"
+            3 -> "Admin"
+            else -> "User"
+        }
+
+        fun showDashboard() {
+            supportFragmentManager.commit { replace(R.id.content_frame, DashboardFragment()) }
+        }
+
+        fun showAppointments() {
+            supportFragmentManager.commit { replace(R.id.content_frame, AppointmentsFragment()) }
+        }
+
+        fun showRecords() {
+            supportFragmentManager.commit { replace(R.id.content_frame, RecordsFragment()) }
+        }
+
         nav.setNavigationItemSelectedListener { menuItem: MenuItem ->
             when (menuItem.itemId) {
-                R.id.nav_dashboard -> {
-                    supportFragmentManager.commit { replace(R.id.content_frame, DashboardFragment()) }
-                }
-                R.id.nav_appointments -> {
-                    supportFragmentManager.commit { replace(R.id.content_frame, AppointmentsFragment()) }
-                }
-                R.id.nav_records -> {
-                    supportFragmentManager.commit { replace(R.id.content_frame, RecordsFragment()) }
-                }
+                R.id.nav_dashboard -> showDashboard()
+                R.id.nav_appointments -> showAppointments()
+                R.id.nav_records -> showRecords()
                 R.id.nav_signout -> {
                     clearAuthSession(this)
                     openLoginActivity(this)
@@ -50,18 +80,45 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
+        bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_bottom_dashboard -> {
+                    showDashboard()
+                    true
+                }
+                R.id.nav_bottom_appointments -> {
+                    showAppointments()
+                    true
+                }
+                R.id.nav_bottom_records -> {
+                    showRecords()
+                    true
+                }
+                R.id.nav_bottom_menu -> {
+                    drawer.openDrawer(androidx.core.view.GravityCompat.START)
+                    false
+                }
+                else -> false
+            }
+        }
+
         // default fragment
         if (savedInstanceState == null) {
-            supportFragmentManager.commit { replace(R.id.content_frame, DashboardFragment()) }
+            showDashboard()
+            bottomNav.selectedItemId = R.id.nav_bottom_dashboard
         }
-        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.toolbar)) { v, insets ->
             val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
             v.setPadding(v.paddingLeft, statusBars.top, v.paddingRight, v.paddingBottom)
             insets
         }
+        ViewCompat.setOnApplyWindowInsetsListener(bottomNav) { v, insets ->
+            val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, navigationBars.bottom)
+            insets
+        }
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.content_frame)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(0, 0, 0, systemBars.bottom)
+            v.setPadding(0, 0, 0, 0)
             insets
         }
     }
