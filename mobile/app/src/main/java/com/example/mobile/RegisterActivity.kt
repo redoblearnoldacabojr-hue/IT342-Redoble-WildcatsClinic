@@ -12,6 +12,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
+import org.json.JSONObject
 
 class RegisterActivity : AppCompatActivity() {
     private lateinit var client: OkHttpClient
@@ -56,7 +57,12 @@ class RegisterActivity : AppCompatActivity() {
 
         val backendBaseUrl = BuildConfig.BACKEND_URL
         val registerUrl = "$backendBaseUrl/api/auth/register"
-        val json = "{\"firstName\":\"$firstName\",\"lastName\":\"$lastName\",\"email\":\"$email\",\"password\":\"$password\"}"
+        val json = JSONObject()
+            .put("firstName", firstName)
+            .put("lastName", lastName)
+            .put("email", email)
+            .put("password", password)
+            .toString()
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
         val req = Request.Builder().url(registerUrl).post(body).build()
 

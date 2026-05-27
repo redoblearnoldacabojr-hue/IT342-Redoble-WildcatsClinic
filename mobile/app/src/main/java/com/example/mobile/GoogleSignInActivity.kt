@@ -91,7 +91,10 @@ class GoogleSignInActivity : AppCompatActivity() {
 
         val backendBaseUrl = BuildConfig.BACKEND_URL
         val loginUrl = "$backendBaseUrl/api/auth/login"
-        val json = "{\"email\":\"$email\",\"password\":\"$password\"}"
+        val json = JSONObject()
+            .put("email", email)
+            .put("password", password)
+            .toString()
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
         val req = Request.Builder().url(loginUrl).post(body).build()
 
@@ -100,9 +103,13 @@ class GoogleSignInActivity : AppCompatActivity() {
                 val resp = client.newCall(req).execute()
                 val respBody = resp.body?.string()
                 if (!resp.isSuccessful || respBody.isNullOrBlank()) {
+                    val errorMessage = respBody
+                        ?.let { runCatching { JSONObject(it).optString("message") }.getOrNull() }
+                        ?.takeIf { it.isNotBlank() }
+                        ?: "Invalid credentials or server error."
                     runOnUiThread {
                         statusText.visibility = View.VISIBLE
-                        statusText.text = "Invalid credentials or server error."
+                        statusText.text = errorMessage
                     }
                     Log.e(TAG, "Login failed: ${resp.code}")
                     return@Thread
@@ -133,7 +140,9 @@ class GoogleSignInActivity : AppCompatActivity() {
     private fun exchangeTokenWithBackend(idToken: String) {
         val backendBaseUrl = BuildConfig.BACKEND_URL
         val backendUrl = "$backendBaseUrl/api/auth/google"
-        val json = "{\"idToken\":\"$idToken\"}"
+        val json = JSONObject()
+            .put("idToken", idToken)
+            .toString()
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
         val req = Request.Builder().url(backendUrl).post(body).build()
 
