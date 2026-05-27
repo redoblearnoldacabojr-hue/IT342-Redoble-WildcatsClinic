@@ -89,6 +89,7 @@
                     android:textSize="14sp" />
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_first_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
@@ -108,6 +109,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_last_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
@@ -127,6 +129,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
@@ -146,6 +149,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
@@ -166,6 +170,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_confirm_password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
@@ -225,6 +230,11 @@
                     android:textAllCaps="false"
                     android:textColor="@color/wildcat_text_primary"
                     app:backgroundTint="@android:color/white"
+                    app:icon="@drawable/ic_provider_badge"
+                    app:iconGravity="textStart"
+                    app:iconPadding="12dp"
+                    app:iconSize="24dp"
+                    app:iconTint="@null"
                     app:cornerRadius="14dp"
                     app:strokeColor="@color/wildcat_border"
                     app:strokeWidth="1dp" />
@@ -236,8 +246,9 @@
                     android:layout_marginTop="22dp"
                     android:gravity="center"
                     android:text="Already have an account? Sign in"
-                    android:textColor="@color/wildcat_text_muted"
-                    android:textSize="13sp" />
+                    android:textColor="@color/wildcat_burgundy"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>

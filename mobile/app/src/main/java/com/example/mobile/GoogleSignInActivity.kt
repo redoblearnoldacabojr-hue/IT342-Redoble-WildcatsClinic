@@ -2,7 +2,12 @@ package com.example.mobile
 
 import android.os.Bundle
 import android.util.Log
+import android.util.Patterns
 import android.view.View
+import android.graphics.Paint
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowCompat
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +25,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.android.material.textfield.TextInputLayout
 
 class GoogleSignInActivity : AppCompatActivity() {
     private val TAG = "GoogleSignInActivity"
@@ -41,7 +47,24 @@ class GoogleSignInActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // If a JWT is already stored, skip signin and open main
+        val existing = getStoredToken(this)
+        if (!existing.isNullOrBlank()) {
+            openMainActivity(this)
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_google_signin)
+
+        // Edge-to-edge content so UI fills the whole screen
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        // Apply system bar insets as padding to root content
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
 
         val logging = HttpLoggingInterceptor()
         logging.level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
@@ -67,6 +90,12 @@ class GoogleSignInActivity : AppCompatActivity() {
             openRegister()
         }
 
+        findViewById<TextView>(R.id.btn_go_register).apply {
+            paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
+        }
+
+        findViewById<TextView>(R.id.btn_go_register).setOnLongClickListener { true }
+
         if (intent.getBooleanExtra(EXTRA_AUTOSTART_GOOGLE, false)) {
             startGoogleFlow()
         }
@@ -78,14 +107,35 @@ class GoogleSignInActivity : AppCompatActivity() {
     }
 
     private fun performEmailLogin() {
+        val emailLayout = findViewById<TextInputLayout>(R.id.layout_login_email)
+        val passwordLayout = findViewById<TextInputLayout>(R.id.layout_login_password)
         val email = findViewById<TextInputEditText>(R.id.input_email).text?.toString()?.trim().orEmpty()
         val password = findViewById<TextInputEditText>(R.id.input_password).text?.toString().orEmpty()
         val statusText = findViewById<TextView>(R.id.login_status_text)
 
+        emailLayout.error = null
+        passwordLayout.error = null
+        statusText.visibility = View.GONE
+
         if (email.isBlank() || password.isBlank()) {
+            if (email.isBlank()) {
+                emailLayout.error = "Email is required"
+            } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                emailLayout.error = "Enter a valid email"
+            }
+            if (password.isBlank()) {
+                passwordLayout.error = "Password is required"
+            }
             statusText.visibility = View.VISIBLE
-            statusText.text = "Email and password are required."
-            Log.w(TAG, "Email and password are required")
+            statusText.text = "Please fix the highlighted fields."
+            Log.w(TAG, "Email and password validation failed")
+            return
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailLayout.error = "Enter a valid email"
+            statusText.visibility = View.VISIBLE
+            statusText.text = "Please fix the highlighted fields."
             return
         }
 
@@ -103,10 +153,7 @@ class GoogleSignInActivity : AppCompatActivity() {
                 val resp = client.newCall(req).execute()
                 val respBody = resp.body?.string()
                 if (!resp.isSuccessful || respBody.isNullOrBlank()) {
-                    val errorMessage = respBody
-                        ?.let { runCatching { JSONObject(it).optString("message") }.getOrNull() }
-                        ?.takeIf { it.isNotBlank() }
-                        ?: "Invalid credentials or server error."
+                    val errorMessage = extractServerErrorMessage(respBody, "Invalid credentials or server error.")
                     runOnUiThread {
                         statusText.visibility = View.VISIBLE
                         statusText.text = errorMessage
@@ -140,6 +187,7 @@ class GoogleSignInActivity : AppCompatActivity() {
     private fun exchangeTokenWithBackend(idToken: String) {
         val backendBaseUrl = BuildConfig.BACKEND_URL
         val backendUrl = "$backendBaseUrl/api/auth/google"
+        val statusText = findViewById<TextView>(R.id.login_status_text)
         val json = JSONObject()
             .put("idToken", idToken)
             .toString()
@@ -150,6 +198,12 @@ class GoogleSignInActivity : AppCompatActivity() {
             try {
                 val resp = client.newCall(req).execute()
                 if (!resp.isSuccessful) {
+                    val errorBody = resp.body?.string()
+                    val errorMessage = extractServerErrorMessage(errorBody, "Google sign-in failed. Please try again.")
+                    runOnUiThread {
+                        statusText.visibility = View.VISIBLE
+                        statusText.text = errorMessage
+                    }
                     Log.e(TAG, "Backend exchange failed: ${resp.code}")
                     return@Thread
                 }
@@ -162,6 +216,10 @@ class GoogleSignInActivity : AppCompatActivity() {
                             Log.i(TAG, "Stored auth token securely")
                             openMainActivity(this@GoogleSignInActivity)
                         } else {
+                            runOnUiThread {
+                                statusText.visibility = View.VISIBLE
+                                statusText.text = "Google sign-in response was incomplete."
+                            }
                             Log.e(TAG, "Empty response body from backend exchange")
                             return@Thread
                         }
@@ -221,9 +279,17 @@ class GoogleSignInActivity : AppCompatActivity() {
                         Log.e(TAG, "Failed parsing auth response", ex)
                     }
                 } else {
+                    runOnUiThread {
+                        statusText.visibility = View.VISIBLE
+                        statusText.text = "Google sign-in response was empty."
+                    }
                     Log.e(TAG, "Empty response body from backend exchange")
                 }
             } catch (ex: Exception) {
+                runOnUiThread {
+                    statusText.visibility = View.VISIBLE
+                    statusText.text = "Google sign-in failed. Check your connection and try again."
+                }
                 Log.e(TAG, "Exchange error", ex)
             }
         }.start()

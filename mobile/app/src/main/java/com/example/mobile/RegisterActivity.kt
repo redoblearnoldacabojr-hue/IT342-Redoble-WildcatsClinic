@@ -2,10 +2,13 @@ package com.example.mobile
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Patterns
+import android.graphics.Paint
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.textfield.TextInputEditText
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -39,9 +42,18 @@ class RegisterActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.btn_go_login).setOnClickListener {
             openLoginActivity(this)
         }
+
+        findViewById<TextView>(R.id.btn_go_login).apply {
+            paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
+        }
     }
 
     private fun performRegister() {
+        val firstNameLayout = findViewById<TextInputLayout>(R.id.layout_first_name)
+        val lastNameLayout = findViewById<TextInputLayout>(R.id.layout_last_name)
+        val emailLayout = findViewById<TextInputLayout>(R.id.layout_email)
+        val passwordLayout = findViewById<TextInputLayout>(R.id.layout_password)
+        val confirmPasswordLayout = findViewById<TextInputLayout>(R.id.layout_confirm_password)
         val firstName = findViewById<TextInputEditText>(R.id.input_first_name).text?.toString()?.trim().orEmpty()
         val lastName = findViewById<TextInputEditText>(R.id.input_last_name).text?.toString()?.trim().orEmpty()
         val email = findViewById<TextInputEditText>(R.id.input_email).text?.toString()?.trim().orEmpty()
@@ -49,9 +61,41 @@ class RegisterActivity : AppCompatActivity() {
         val confirmPassword = findViewById<TextInputEditText>(R.id.input_confirm_password).text?.toString().orEmpty()
         val statusText = findViewById<TextView>(R.id.register_status_text)
 
-        if (password != confirmPassword) {
+        firstNameLayout.error = null
+        lastNameLayout.error = null
+        emailLayout.error = null
+        passwordLayout.error = null
+        confirmPasswordLayout.error = null
+        statusText.visibility = View.GONE
+
+        var valid = true
+        if (firstName.isBlank()) {
+            firstNameLayout.error = "First name is required"
+            valid = false
+        }
+        if (lastName.isBlank()) {
+            lastNameLayout.error = "Last name is required"
+            valid = false
+        }
+        if (email.isBlank()) {
+            emailLayout.error = "Email is required"
+            valid = false
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailLayout.error = "Enter a valid email"
+            valid = false
+        }
+        if (password.length < 8) {
+            passwordLayout.error = "Use at least 8 characters"
+            valid = false
+        }
+        if (confirmPassword != password) {
+            confirmPasswordLayout.error = "Passwords do not match"
+            valid = false
+        }
+
+        if (!valid) {
             statusText.visibility = View.VISIBLE
-            statusText.text = "Passwords do not match."
+            statusText.text = "Please fix the highlighted fields."
             return
         }
 
@@ -70,9 +114,10 @@ class RegisterActivity : AppCompatActivity() {
             try {
                 val resp = client.newCall(req).execute()
                 if (!resp.isSuccessful) {
+                    val errorMessage = resp.body?.string().orEmpty().ifBlank { "Registration failed. Please try again." }
                     runOnUiThread {
                         statusText.visibility = View.VISIBLE
-                        statusText.text = "Registration failed. Please try again."
+                        statusText.text = extractServerErrorMessage(errorMessage, "Registration failed. Please try again.")
                     }
                     return@Thread
                 }

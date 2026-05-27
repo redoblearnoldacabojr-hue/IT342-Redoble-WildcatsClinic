@@ -35,6 +35,20 @@ fun parseAuthSession(body: String): AuthSession? {
     }
 }
 
+fun extractServerErrorMessage(body: String?, fallback: String): String {
+    if (body.isNullOrBlank()) return fallback
+
+    return runCatching {
+        val json = JSONObject(body)
+        when {
+            json.has("message") && !json.isNull("message") -> json.optString("message", fallback)
+            json.has("error") && !json.isNull("error") -> json.optString("error", fallback)
+            json.has("title") && !json.isNull("title") -> json.optString("title", fallback)
+            else -> fallback
+        }
+    }.getOrDefault(fallback)
+}
+
 fun persistAuthSession(context: Context, session: AuthSession) {
     val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
