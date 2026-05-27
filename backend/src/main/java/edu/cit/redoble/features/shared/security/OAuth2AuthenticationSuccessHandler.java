@@ -71,7 +71,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             user.getRole()
         );
 
-        String redirectBaseUrl = resolveRedirectBaseUrl(request);
+        String redirectBaseUrl = resolveRedirectBaseUrl(request, response);
 
         if (redirectBaseUrl == null || redirectBaseUrl.isBlank()) {
             response.setStatus(HttpServletResponse.SC_OK);
@@ -96,7 +96,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         response.sendRedirect(redirectUrl);
     }
 
-    private String resolveRedirectBaseUrl(HttpServletRequest request) {
+    private String resolveRedirectBaseUrl(HttpServletRequest request, HttpServletResponse response) {
         // Prefer session-stored mobile redirect when present
         HttpSession session = request.getSession(false);
         if (session != null) {
