@@ -5,6 +5,7 @@ import edu.cit.redoble.features.auth.dto.AuthResponse;
 import edu.cit.redoble.features.auth.entity.AuthProvider;
 import edu.cit.redoble.features.auth.entity.UserEntity;
 import edu.cit.redoble.features.auth.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -116,13 +117,11 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         if (request.getCookies() != null) {
             for (var c : request.getCookies()) {
                 if ("mobile_oauth".equals(c.getName())) {
-                    // Remove cookie by setting expired cookie
-                    javax.servlet.http.Cookie rem = new javax.servlet.http.Cookie(c.getName(), "");
+                    // Remove cookie by sending an expired cookie back to the browser.
+                    Cookie rem = new Cookie(c.getName(), "");
                     rem.setPath("/");
                     rem.setMaxAge(0);
-                    try {
-                        request.setAttribute("__remove_cookie", rem);
-                    } catch (Exception ignored) {}
+                    response.addCookie(rem);
                     return MOBILE_OAUTH_REDIRECT_URI;
                 }
             }

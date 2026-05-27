@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -75,7 +76,7 @@ public class AuthController {
             session.setAttribute(MOBILE_OAUTH_REDIRECT_SESSION_ATTRIBUTE, normalizedRedirectUri);
             // Also set a short-lived cookie so browsers that don't preserve the server session
             // across the external Google authorization round-trip can still be identified.
-            javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie("mobile_oauth", "1");
+            Cookie cookie = new Cookie("mobile_oauth", "1");
             cookie.setPath("/");
             cookie.setHttpOnly(true);
             // Do not mark Secure here; server may be used in local dev. In production HTTPS should be used.
