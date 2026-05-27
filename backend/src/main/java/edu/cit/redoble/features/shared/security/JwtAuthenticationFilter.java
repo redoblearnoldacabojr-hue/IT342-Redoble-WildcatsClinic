@@ -66,6 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    response.setHeader("Authorization", "Bearer " + jwtService.generateToken(user));
                 }
             } catch (Exception ignored) {
                 // Invalid token or user lookup failure; continue without authentication.
