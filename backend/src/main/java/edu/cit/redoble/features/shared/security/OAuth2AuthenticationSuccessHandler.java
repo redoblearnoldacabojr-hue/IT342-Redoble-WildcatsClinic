@@ -96,6 +96,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     }
 
     private String resolveRedirectBaseUrl(HttpServletRequest request) {
+        // Prefer session-stored mobile redirect when present
         HttpSession session = request.getSession(false);
         if (session != null) {
             Object mobileRedirect = session.getAttribute(MOBILE_OAUTH_REDIRECT_SESSION_ATTRIBUTE);
@@ -105,6 +106,24 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 String normalizedRedirectUri = redirectUri.trim();
                 if (MOBILE_OAUTH_REDIRECT_URI.equals(normalizedRedirectUri)) {
                     return normalizedRedirectUri;
+                }
+            }
+        }
+
+        // Fallback: some browsers or platforms may not preserve the server session across
+        // the external Google OAuth round-trip. In that case check for a short-lived cookie
+        // the start endpoint sets and honor it as a signal to redirect back into the app.
+        if (request.getCookies() != null) {
+            for (var c : request.getCookies()) {
+                if ("mobile_oauth".equals(c.getName())) {
+                    // Remove cookie by setting expired cookie
+                    javax.servlet.http.Cookie rem = new javax.servlet.http.Cookie(c.getName(), "");
+                    rem.setPath("/");
+                    rem.setMaxAge(0);
+                    try {
+                        request.setAttribute("__remove_cookie", rem);
+                    } catch (Exception ignored) {}
+                    return MOBILE_OAUTH_REDIRECT_URI;
                 }
             }
         }

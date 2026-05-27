@@ -73,6 +73,14 @@ public class AuthController {
 
             HttpSession session = request.getSession(true);
             session.setAttribute(MOBILE_OAUTH_REDIRECT_SESSION_ATTRIBUTE, normalizedRedirectUri);
+            // Also set a short-lived cookie so browsers that don't preserve the server session
+            // across the external Google authorization round-trip can still be identified.
+            javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie("mobile_oauth", "1");
+            cookie.setPath("/");
+            cookie.setHttpOnly(true);
+            // Do not mark Secure here; server may be used in local dev. In production HTTPS should be used.
+            cookie.setMaxAge(300); // 5 minutes
+            response.addCookie(cookie);
         }
 
         response.sendRedirect("/oauth2/authorization/google");
