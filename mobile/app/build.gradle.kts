@@ -43,7 +43,7 @@ android {
         create("release") {
             // Optional: set these in keystore.properties if you want automated signing
             if (keystoreProperties.containsKey("storeFile")) {
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
             }
             keyAlias = keystoreProperties.getProperty("keyAlias", "")
             keyPassword = keystoreProperties.getProperty("keyPassword", "")
